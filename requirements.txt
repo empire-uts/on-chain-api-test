@@ -1,3 +1,8 @@
 fastapi
 mangum
 pydantic
+requests
+typing
+datetime
+boto3
+pandas==1.2.4

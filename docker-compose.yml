@@ -2,7 +2,7 @@ version: '3'
 services:
   python3:
     build: .
-    container_name: 'mangum-test'
+    container_name: 'sql-api-test'
     working_dir: '/app'
     volumes:
       - ./:/app

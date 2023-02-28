@@ -1,14 +1,14 @@
 {
   "service": {
-    "service": "pyapi-practice",
+    "service": "sql-api-test",
     "serviceObject": {
-      "name": "pyapi-practice"
+      "name": "sql-api-test"
     },
     "provider": {
       "name": "aws",
       "stage": "prod",
       "region": "ap-northeast-1",
-      "deploymentBucket": "pyapi-practice",
+      "deploymentBucket": "athena-api-kii",
       "logRetentionInDays": 30,
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
@@ -18,7 +18,7 @@
           "IndexLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/pyapi-practice-prod-index",
+              "LogGroupName": "/aws/lambda/sql-api-test-prod-index",
               "RetentionInDays": 30
             }
           },
@@ -47,7 +47,7 @@
                     "Fn::Join": [
                       "-",
                       [
-                        "pyapi-practice",
+                        "sql-api-test",
                         "prod",
                         "lambda"
                       ]
@@ -64,7 +64,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/pyapi-practice-prod*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/sql-api-test-prod*:*"
                           }
                         ]
                       },
@@ -75,7 +75,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/pyapi-practice-prod*:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/sql-api-test-prod*:*:*"
                           }
                         ]
                       }
@@ -88,7 +88,7 @@
                 "Fn::Join": [
                   "-",
                   [
-                    "pyapi-practice",
+                    "sql-api-test",
                     "prod",
                     {
                       "Ref": "AWS::Region"
@@ -103,10 +103,10 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
-                "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/pyapi-practice@sha256:bd272fdee77f1891f865327d51cd2a66a4dda8c8fa9684dd6ed8fa4a6b860b39"
+                "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57"
               },
               "PackageType": "Image",
-              "FunctionName": "pyapi-practice-prod-index",
+              "FunctionName": "sql-api-test-prod-index",
               "MemorySize": 1024,
               "Timeout": 6,
               "Role": {
@@ -120,20 +120,20 @@
               "IndexLogGroup"
             ]
           },
-          "IndexLambdaVersionCuEEgmYJEXe9gfh5J0GFxRsUEBrC78Rqjp8N8il3CQ": {
+          "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "IndexLambdaFunction"
               },
-              "CodeSha256": "bd272fdee77f1891f865327d51cd2a66a4dda8c8fa9684dd6ed8fa4a6b860b39"
+              "CodeSha256": "6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57"
             }
           },
           "ApiGatewayRestApi": {
             "Type": "AWS::ApiGateway::RestApi",
             "Properties": {
-              "Name": "prod-pyapi-practice",
+              "Name": "prod-sql-api-test",
               "EndpointConfiguration": {
                 "Types": [
                   "EDGE"
@@ -248,7 +248,7 @@
               "IndexLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1674439270668": {
+          "ApiGatewayDeployment1677154972313": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -301,18 +301,18 @@
         },
         "Outputs": {
           "ServerlessDeploymentBucketName": {
-            "Value": "pyapi-practice",
+            "Value": "athena-api-kii",
             "Export": {
-              "Name": "sls-pyapi-practice-prod-ServerlessDeploymentBucketName"
+              "Name": "sls-sql-api-test-prod-ServerlessDeploymentBucketName"
             }
           },
           "IndexLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "IndexLambdaVersionCuEEgmYJEXe9gfh5J0GFxRsUEBrC78Rqjp8N8il3CQ"
+              "Ref": "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM"
             },
             "Export": {
-              "Name": "sls-pyapi-practice-prod-IndexLambdaFunctionQualifiedArn"
+              "Name": "sls-sql-api-test-prod-IndexLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -338,7 +338,7 @@
               ]
             },
             "Export": {
-              "Name": "sls-pyapi-practice-prod-ServiceEndpoint"
+              "Name": "sls-sql-api-test-prod-ServiceEndpoint"
             }
           }
         }
@@ -348,7 +348,7 @@
     "pluginsData": {},
     "functions": {
       "index": {
-        "image": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/pyapi-practice@sha256:bd272fdee77f1891f865327d51cd2a66a4dda8c8fa9684dd6ed8fa4a6b860b39",
+        "image": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57",
         "events": [
           {
             "http": {
@@ -375,18 +375,18 @@
             }
           }
         ],
-        "name": "pyapi-practice-prod-index",
+        "name": "sql-api-test-prod-index",
         "package": {},
         "memory": 1024,
         "timeout": 6,
         "vpc": {},
-        "versionLogicalId": "IndexLambdaVersionCuEEgmYJEXe9gfh5J0GFxRsUEBrC78Rqjp8N8il3CQ"
+        "versionLogicalId": "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM"
       }
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "service": "pyapi-practice",
+      "service": "sql-api-test",
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
       },
@@ -398,7 +398,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/pyapi-practice/prod/1674439272172-2023-01-23T02:01:12.172Z",
+    "artifactDirectoryName": "serverless/sql-api-test/prod/1677154974121-2023-02-23T12:22:54.121Z",
     "artifact": ""
   }
 }
