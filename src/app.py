@@ -10,9 +10,8 @@ ATHENA_DB_NAME = 'enmai-check'
 app = FastAPI()
 handler = Mangum(app)
 
-session = Session(profile_name='kii')
-s3_client = session.client('s3')
-athena_client = session.client('athena')
+s3_client = boto3.client('s3')
+athena_client = boto3.client('athena')
 
 cache = {}
 cache_time = {}
