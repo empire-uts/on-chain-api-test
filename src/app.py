@@ -1,106 +1,76 @@
-from fastapi import FastAPI
-from mangum import Mangum
-from pydantic import BaseModel
-from typing import Union
-from datetime import datetime, timedelta, date
-import requests
-import json
-import time
-
 import boto3
 import pandas as pd
+from fastapi import FastAPI, HTTPException, Path
+from mangum import Mangum
+from datetime import datetime, timedelta
 
-headers = {
-    "accept": "application/json",
-    "X-API-KEY": "5aecfc59-6216-47cd-81f0-397093b41221"
-}
+ATHENA_OUTPUT_BUCKET = 'athena-api-kii'
+ATHENA_DB_NAME = 'enmai-check'
 
 app = FastAPI()
-cache = {}
-cash_time = 60
-
-def get_cache(key, func, expiration_seconds = 60):
-    import datetime
-    global cache
-    print(cache)
-    # キャッシュから取得
-    if key in cache:
-        now = datetime.datetime.now()
-        if (cache[key]["updated"] + datetime.timedelta(seconds=expiration_seconds)) > now:
-            print("cashやで")
-            a = 1
-            return cache[key]["value"], a
-
-    # キャッシュ更新
-    value = func()
-    now = datetime.datetime.now()
-    cache[key] = {
-        "updated" : now,
-        "value"   : value
-    }
-    a = 0
-    return value, a
-
-class Athena(object):
-    def __init__(self, session=None):
-        self.client = session.client('athena')
-
-    def execute_sql(self, sql):
-        athena_client = self.client
-
-        exec_id = athena_client.start_query_execution(
-            QueryString=sql,
-            QueryExecutionContext={"Database": 'astar'},
-            ResultConfiguration={
-                'OutputLocation': 's3://magpy-indexer-bucket-test/test'
-            },
-            WorkGroup='primary'
-        )['QueryExecutionId']
-
-        print('Athena Execution ID: {}'.format(exec_id))
-        print('query: ')
-        print(sql)
-
-        status = athena_client.get_query_execution(QueryExecutionId=exec_id)['QueryExecution']['Status']
-
-        # ポーリング
-        while status['State'] not in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
-            print('{}: wait query running...'.format(status['State']))
-            time.sleep(5)
-            status = athena_client.get_query_execution(QueryExecutionId=exec_id)['QueryExecution']['Status']
-
-        return status['State'], exec_id
-
-
-def main(string: date0, string: date1):
-    session = boto3.session.Session()
-
-    athena = Athena(session)
-    
-    sql = 'select "token0_symbol", "token0_amount", "token1_symbol", "token1_amount" from "dex_trades" where "block_timestamp"<' + {date0} + ' and "block_timestamp">' + {date1} + ' order by "block_timestamp" asc limit 50;'
-
-    status, exec_id = athena.execute_sql(sql)
-
-    if status == 'SUCCEEDED':
-        s3_client = session.client('s3')
-        body = s3_client.get_object(Bucket='pyapi-practice',
-                                    Key='athena-output/{0}.csv'.format(exec_id))['Body']
-
-        df = pd.read_csv(body, lineterminator='n')
-
-        print('[result]')
-        print(df)
-
-
-@app.get("/root")
-def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/dexTrades/{date0}/{date1}")
-def dexTrades(date0, date1):
-    f = f"main({date0}, {date1})"
-    response = get_cache(f, main(date0, date1), cash_time)[0]
-    return response
-
 handler = Mangum(app)
+
+s3_client = boto3.client('s3')
+athena_client = boto3.client('athena')
+
+cache = {}
+cache_time = {}
+
+def poll_query_status(query_execution_id):
+    response = athena_client.get_query_execution(QueryExecutionId=query_execution_id)
+    state = response['QueryExecution']['Status']['State']
+
+    if state == 'SUCCEEDED':
+        return True
+    elif state in ['FAILED', 'CANCELLED']:
+        raise HTTPException(status_code=400, detail=f'Query failed with state {state}.')
+    else:
+        return False
+
+def run_query(query):
+    if query in cache:
+        if datetime.utcnow() - cache_time[query] < timedelta(minutes=5):
+            return cache[query]
+        else:
+            del cache[query]
+            del cache_time[query]
+
+    response = athena_client.start_query_execution(
+        QueryString=query,
+        QueryExecutionContext={
+            'Database': ATHENA_DB_NAME
+        },
+        ResultConfiguration={
+            'OutputLocation': f's3://{ATHENA_OUTPUT_BUCKET}/'
+        }
+    )
+
+    query_execution_id = response['QueryExecutionId']
+    status = False
+
+    while not status:
+        status = poll_query_status(query_execution_id)
+
+    s3_key = f'{query_execution_id}.csv'
+    s3_path = f's3://{ATHENA_OUTPUT_BUCKET}/{s3_key}'
+
+    try:
+        s3_client.head_object(Bucket=ATHENA_OUTPUT_BUCKET, Key=s3_key)
+    except:
+        raise HTTPException(status_code=400, detail='Query results not found.')
+
+    data = pd.read_csv(s3_path)
+    json_result = data.to_json(orient='records')
+
+    cache[query] = json_result
+    cache_time[query] = datetime.utcnow()
+
+    return json_result
+
+@app.get("/query/{sql_query}")
+async def query(sql_query: str = Path(..., description="SQL query to execute using Athena")):
+    try:
+        result = run_query(sql_query)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
