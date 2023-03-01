@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Path
 from mangum import Mangum
 from datetime import datetime, timedelta
 
-ATHENA_OUTPUT_BUCKET = 'athena-api-kii'
+ATHENA_OUTPUT_BUCKET = '578420364049-ap-northeast-1-athena-results-bucket-e25440ffkt'
 ATHENA_DB_NAME = 'enmai-check'
 
 app = FastAPI()
