@@ -1,4 +1,4 @@
-import boto3
+import boto3.session import Session
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Path
 from mangum import Mangum
@@ -10,7 +10,7 @@ ATHENA_DB_NAME = 'enmai-check'
 app = FastAPI()
 handler = Mangum(app)
 
-session = boto3.session.Session(profile_name='kii')
+session = Session(profile_name='kii')
 s3_client = session.client('s3')
 athena_client = session.client('athena')
 
