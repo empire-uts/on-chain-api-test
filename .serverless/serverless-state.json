@@ -103,7 +103,7 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
-                "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57"
+                "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:1b3e090c8d1c664424e269e087b550f29b7ff1ca2d171a331a435846b4966d27"
               },
               "PackageType": "Image",
               "FunctionName": "sql-api-test-prod-index",
@@ -120,14 +120,14 @@
               "IndexLogGroup"
             ]
           },
-          "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM": {
+          "IndexLambdaVersionRPEcjZLUIygYL9K8bmZVFnASPDnIaBXAS8tyK21oA": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "IndexLambdaFunction"
               },
-              "CodeSha256": "6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57"
+              "CodeSha256": "1b3e090c8d1c664424e269e087b550f29b7ff1ca2d171a331a435846b4966d27"
             }
           },
           "ApiGatewayRestApi": {
@@ -248,7 +248,7 @@
               "IndexLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1677154972313": {
+          "ApiGatewayDeployment1677632429781": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -309,7 +309,7 @@
           "IndexLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM"
+              "Ref": "IndexLambdaVersionRPEcjZLUIygYL9K8bmZVFnASPDnIaBXAS8tyK21oA"
             },
             "Export": {
               "Name": "sls-sql-api-test-prod-IndexLambdaFunctionQualifiedArn"
@@ -348,7 +348,7 @@
     "pluginsData": {},
     "functions": {
       "index": {
-        "image": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:6fd3c31d056e184bff25586c1297bfa361d85983654a3c6d2c07b1a1c987ee57",
+        "image": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:1b3e090c8d1c664424e269e087b550f29b7ff1ca2d171a331a435846b4966d27",
         "events": [
           {
             "http": {
@@ -380,7 +380,7 @@
         "memory": 1024,
         "timeout": 6,
         "vpc": {},
-        "versionLogicalId": "IndexLambdaVersionfdlPiLvsvDAKNntZF3XdAYuLbt5Kfgnpml5BBbM"
+        "versionLogicalId": "IndexLambdaVersionRPEcjZLUIygYL9K8bmZVFnASPDnIaBXAS8tyK21oA"
       }
     },
     "configValidationMode": "warn",
@@ -398,7 +398,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/sql-api-test/prod/1677154974121-2023-02-23T12:22:54.121Z",
+    "artifactDirectoryName": "serverless/sql-api-test/prod/1677632431675-2023-03-01T01:00:31.675Z",
     "artifact": ""
   }
 }
