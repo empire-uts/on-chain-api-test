@@ -12,7 +12,7 @@ handler = Mangum(app)
 
 session = boto3.session.Session(profile_name='kii')
 s3_client = session.client('s3')
-athena_client = boto3.client('athena')
+athena_client = session.client('athena')
 
 cache = {}
 cache_time = {}
