@@ -1,4 +1,4 @@
-import boto3.session import Session
+import boto3
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Path
 from mangum import Mangum
