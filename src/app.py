@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 
 app = FastAPI(debug=True)
 
-# Set up Athena client
+# Set up Athena client and S3 bucket
+s3_output = 's3://athena-api-kii/output/'
 athena = boto3.client('athena')
 database = 'enmai-check'
 table = 'dex_trades'
@@ -47,6 +48,9 @@ def run_query(date, address):
         QueryString=query,
         QueryExecutionContext={
             'Database': database
+        },
+        ResultConfiguration={
+            'OutputLocation': s3_output,
         }
     )
     query_execution_id = response['QueryExecutionId']
