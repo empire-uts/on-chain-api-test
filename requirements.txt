@@ -1,5 +1,5 @@
 boto3
-import pandas
+pandas
 fastapi
 mangum
 cachetools
