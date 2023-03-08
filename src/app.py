@@ -1,76 +1,99 @@
 import boto3
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Path
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from mangum import Mangum
+from cachetools import TTLCache
 from datetime import datetime, timedelta
-
-ATHENA_OUTPUT_BUCKET = '578420364049-ap-northeast-1-athena-results-bucket-e25440ffkt'
-ATHENA_DB_NAME = 'enmai-check'
 
 app = FastAPI()
 handler = Mangum(app)
 
-s3_client = boto3.client('s3')
-athena_client = boto3.client('athena')
+# Set up Athena client and S3 bucket
+s3_output = 's3://578420364049-ap-northeast-1-athena-results-bucket-e25440ffkt'
+athena = boto3.client('athena')
+database = 'enmai-check'
+table = 'dex_trades'
 
-cache = {}
-cache_time = {}
+# Set up cache
+cache = TTLCache(maxsize=1024, ttl=60)
 
-def poll_query_status(query_execution_id):
-    response = athena_client.get_query_execution(QueryExecutionId=query_execution_id)
+# Define Athena query
+def run_query(start_date, end_date):
+    query = f"""
+        select 
+            if("token0_address"='0x6a2d262d56735dba19dd70682b39f6be9a931d98' 
+                or "token0_address"='0x3795c36e7d12a8c252a20c5a7b455f7c57b60283'
+                or "token0_address"='0x733ebcc6df85f8266349defd0980f8ced9b45f35'
+                or "token0_address"='0x4bf769b05e832fcdc9053fffbc78ca889acb5e1e',
+                    abs("token0_amount" / "token1_amount"), 
+                    abs("token1_amount" / "token0_amount"))
+        from {table}
+        where 
+            "block_timestamp"<='{date}' 
+            and "pair_stable"=1 
+            and ("token0_address"='{address}' 
+                or "token1_address"='{address}') 
+            and ("token0_address"='0x6a2d262d56735dba19dd70682b39f6be9a931d98' 
+                or "token0_address"='0x3795c36e7d12a8c252a20c5a7b455f7c57b60283'
+                or "token0_address"='0x733ebcc6df85f8266349defd0980f8ced9b45f35'
+                or "token0_address"='0x4bf769b05e832fcdc9053fffbc78ca889acb5e1e'
+                or "token1_address"='0x6a2d262d56735dba19dd70682b39f6be9a931d98'
+                or "token1_address"='0x3795c36e7d12a8c252a20c5a7b455f7c57b60283'
+                or "token1_address"='0x733ebcc6df85f8266349defd0980f8ced9b45f35'
+                or "token1_address"='0x4bf769b05e832fcdc9053fffbc78ca889acb5e1e')
+        order by "block_timestamp" desc 
+        limit 1;
+    """
+    response = athena.start_query_execution(
+        QueryString=query,
+        QueryExecutionContext={
+            'Database': database
+        },
+        ResultConfiguration={
+            'OutputLocation': s3_output,
+        }
+    )
+    query_execution_id = response['QueryExecutionId']
+    return query_execution_id
+
+# Get results from Athena query and return as JSON
+def get_results(query_execution_id):
+    response = athena.get_query_execution(QueryExecutionId=query_execution_id)
     state = response['QueryExecution']['Status']['State']
 
     if state == 'SUCCEEDED':
-        return True
-    elif state in ['FAILED', 'CANCELLED']:
-        raise HTTPException(status_code=400, detail=f'Query failed with state {state}.')
+        result = athena.get_query_results(QueryExecutionId=query_execution_id)
+        columns = [col['VarCharValue'] for col in result['ResultSet']['Rows'][0]['Data']]
+        data = []
+        for row in result['ResultSet']['Rows'][1:]:
+            data.append([cell['VarCharValue'] for cell in row['Data']])
+        df = pd.DataFrame(data, columns=columns)
+        return df.to_json(orient='records')
+    elif state == 'FAILED':
+        reason = response['QueryExecution']['Status']['StateChangeReason']
+        raise ValueError(f'Query failed: {reason}')
     else:
-        return False
+        raise ValueError(f'Query still running: {state}')
 
-def run_query(query):
-    if query in cache:
-        if datetime.utcnow() - cache_time[query] < timedelta(minutes=5):
-            return cache[query]
-        else:
-            del cache[query]
-            del cache_time[query]
-
-    response = athena_client.start_query_execution(
-        QueryString=query,
-        QueryExecutionContext={
-            'Database': ATHENA_DB_NAME
-        },
-        ResultConfiguration={
-            'OutputLocation': f's3://{ATHENA_OUTPUT_BUCKET}/'
-        }
-    )
-
-    query_execution_id = response['QueryExecutionId']
-    status = False
-
-    while not status:
-        status = poll_query_status(query_execution_id)
-
-    s3_key = f'{query_execution_id}.csv'
-    s3_path = f's3://{ATHENA_OUTPUT_BUCKET}/{s3_key}'
-
-    try:
-        s3_client.head_object(Bucket=ATHENA_OUTPUT_BUCKET, Key=s3_key)
-    except:
-        raise HTTPException(status_code=400, detail='Query results not found.')
-
-    data = pd.read_csv(s3_path)
-    json_result = data.to_json(orient='records')
-
-    cache[query] = json_result
-    cache_time[query] = datetime.utcnow()
-
-    return json_result
-
-@app.get("/query/{sql_query}")
-async def query(sql_query: str = Path(..., description="SQL query to execute using Athena")):
-    try:
-        result = run_query(sql_query)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# Define endpoint with caching and polling
+@app.get("/dex_trade")
+async def get_dex_trade(date: str, address: str):
+    key = f"{date}:{address}"
+    cached = cache.get(key)
+    if cached:
+        return JSONResponse(content=cached)
+    else:
+        query_execution_id = run_query(start, end)
+        while True:
+            response = athena.get_query_execution(QueryExecutionId=query_execution_id)
+            state = response['QueryExecution']['Status']['State']
+            if state == 'SUCCEEDED':
+                results = get_results(query_execution_id)
+                cache[key] = results
+                return JSONResponse(content=results)
+            elif state == 'FAILED':
+                reason = response['QueryExecution']['Status']['StateChangeReason']
+                raise ValueError(f'Query failed: {reason}')
+            else:
+                await asyncio.sleep(1)
