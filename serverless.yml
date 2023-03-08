@@ -22,8 +22,11 @@ provider:
             - s3:AbortMultipartUpload
             - s3:CreateBucket
             - s3:PutObject
-          Resource:
-            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*
+            - s3:ListObject
+          Resource: [
+            "arn:aws:s3:::${self:provider.environment.S3_BUCKET}",
+            "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
+            ]
         # CloudWatchにログ出力を許可
         - Effect: Allow
           Action:
