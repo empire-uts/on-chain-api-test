@@ -93,7 +93,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:1f5f0a465bbd2a9def351f41ff3e2b6a87fe7b501b4e022dfe9a7b0ed72378ff"
+          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:713ee3dcca88b027e4c4a8e3dc2933ba9fd96a3f20d02d5d3e8f2a23579af4ed"
         },
         "PackageType": "Image",
         "FunctionName": "sql-api-test-prod-index",
@@ -110,14 +110,14 @@
         "IndexLogGroup"
       ]
     },
-    "IndexLambdaVersionIZEanWujszCZTLBhQJ53ceJ5rxloU8OnbTRayAmjWbc": {
+    "IndexLambdaVersion1XAT5szGzaCdtV4i6AQOThfGazEhbmxKFuc5IeFZBk": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "IndexLambdaFunction"
         },
-        "CodeSha256": "1f5f0a465bbd2a9def351f41ff3e2b6a87fe7b501b4e022dfe9a7b0ed72378ff"
+        "CodeSha256": "713ee3dcca88b027e4c4a8e3dc2933ba9fd96a3f20d02d5d3e8f2a23579af4ed"
       }
     },
     "ApiGatewayRestApi": {
@@ -238,7 +238,7 @@
         "IndexLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1678243160706": {
+    "ApiGatewayDeployment1678246736096": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -299,7 +299,7 @@
     "IndexLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "IndexLambdaVersionIZEanWujszCZTLBhQJ53ceJ5rxloU8OnbTRayAmjWbc"
+        "Ref": "IndexLambdaVersion1XAT5szGzaCdtV4i6AQOThfGazEhbmxKFuc5IeFZBk"
       },
       "Export": {
         "Name": "sls-sql-api-test-prod-IndexLambdaFunctionQualifiedArn"

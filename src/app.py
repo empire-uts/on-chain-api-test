@@ -7,7 +7,6 @@ from cachetools import TTLCache
 from datetime import datetime, timedelta
 
 app = FastAPI()
-handler = Mangum(app)
 
 # Set up Athena client and S3 bucket
 s3_output = 's3://578420364049-ap-northeast-1-athena-results-bucket-e25440ffkt'
@@ -97,3 +96,5 @@ async def get_dex_trades(date: str, address: str):
                 raise ValueError(f'Query failed: {reason}')
             else:
                 await asyncio.sleep(1)
+
+handler = Mangum(app)
