@@ -19,7 +19,7 @@ table = 'dex_trades'
 cache = TTLCache(maxsize=1024, ttl=60)
 
 # Define Athena query
-def run_query(start_date, end_date):
+def run_query(date, address):
     query = f"""
         select 
             if("token0_address"='0x6a2d262d56735dba19dd70682b39f6be9a931d98' 
@@ -77,14 +77,14 @@ def get_results(query_execution_id):
         raise ValueError(f'Query still running: {state}')
 
 # Define endpoint with caching and polling
-@app.get("/dex_trade")
-async def get_dex_trade(date: str, address: str):
+@app.get("/dex_trades")
+async def get_dex_trades(date: str, address: str):
     key = f"{date}:{address}"
     cached = cache.get(key)
     if cached:
         return JSONResponse(content=cached)
     else:
-        query_execution_id = run_query(start, end)
+        query_execution_id = run_query(date, address)
         while True:
             response = athena.get_query_execution(QueryExecutionId=query_execution_id)
             state = response['QueryExecution']['Status']['State']
