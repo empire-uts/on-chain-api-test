@@ -1,8 +1,6 @@
+boto3
+import pandas
 fastapi
 mangum
-pydantic
-requests
-typing
+cachetools
 datetime
-boto3
-pandas==1.2.4
