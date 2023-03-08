@@ -4,6 +4,26 @@ provider:
   name: aws
   iamManagedPolicies:
     - "arn:aws:iam::aws:policy/service-role/AWSQuicksightAthenaAccess"
+  environment:
+    S3_BUCKET: athena-api-kii  # バケットを指定
+  iam:
+    role:
+      statements:
+        # S3の指定バケット上のオブジェクトの入出力を許可
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*
+        # CloudWatchにログ出力を許可
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - "*"
   stage: prod
   region: ap-northeast-1
   deploymentBucket: athena-api-kii # デプロイ時に使うS3 あまり増やすと上限に引っかかるのでこれだけにした
