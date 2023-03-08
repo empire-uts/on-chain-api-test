@@ -47,7 +47,8 @@
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
-                    "logs:CreateLogGroup"
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
                   ],
                   "Resource": [
                     {
@@ -93,7 +94,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:713ee3dcca88b027e4c4a8e3dc2933ba9fd96a3f20d02d5d3e8f2a23579af4ed"
+          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:b8b84a8d52279b716779c980bb727ac48c13cd6e88145106d9ad0a86ec8e66c6"
         },
         "PackageType": "Image",
         "FunctionName": "sql-api-test-prod-index",
@@ -110,14 +111,14 @@
         "IndexLogGroup"
       ]
     },
-    "IndexLambdaVersion1XAT5szGzaCdtV4i6AQOThfGazEhbmxKFuc5IeFZBk": {
+    "IndexLambdaVersionsa7zzaxQT4PTHwrzN3KRIQHsELNwWXTpjLlt2cMbFOY": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "IndexLambdaFunction"
         },
-        "CodeSha256": "713ee3dcca88b027e4c4a8e3dc2933ba9fd96a3f20d02d5d3e8f2a23579af4ed"
+        "CodeSha256": "b8b84a8d52279b716779c980bb727ac48c13cd6e88145106d9ad0a86ec8e66c6"
       }
     },
     "ApiGatewayRestApi": {
@@ -238,7 +239,7 @@
         "IndexLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1678246736096": {
+    "ApiGatewayDeployment1678260142466": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -299,7 +300,7 @@
     "IndexLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "IndexLambdaVersion1XAT5szGzaCdtV4i6AQOThfGazEhbmxKFuc5IeFZBk"
+        "Ref": "IndexLambdaVersionsa7zzaxQT4PTHwrzN3KRIQHsELNwWXTpjLlt2cMbFOY"
       },
       "Export": {
         "Name": "sls-sql-api-test-prod-IndexLambdaFunctionQualifiedArn"
