@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 app = FastAPI(debug=True)
 
 # Set up Athena client and S3 bucket
-s3_output = 's3://578420364049-ap-northeast-1-athena-results-bucket-e25440ffkt'
+s3_output = 's3://athena-api-kii/output/'
 athena = boto3.client('athena')
 database = 'enmai-check'
 table = 'dex_trades'
