@@ -3,30 +3,36 @@ service: sql-api-test
 provider:
   name: aws
   iamManagedPolicies:
-    - "arn:aws:iam::aws:policy/service-role/AWSQuicksightAthenaAccess"
+    - arn:aws:iam::aws:policy/service-role/AWSQuicksightAthenaAccess
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:ListBucket
+      Resource:
+        - arn:aws:s3:::glue-test-enmai/*
   environment:
     S3_BUCKET: athena-api-kii  # バケットを指定
   iam:
     role:
       statements:
         # S3の指定バケット上のオブジェクトの入出力を許可
-        - Effect: Allow
+        - Effect: "Allow"
           Action:
-            - s3:GetObject
-            - s3:PutObject
-            - s3:GetBucketLocation
-            - s3:GetObject
-            - s3:ListBucket
-            - s3:ListBucketMultipartUploads
-            - s3:ListMultipartUploadParts
-            - s3:AbortMultipartUpload
-            - s3:CreateBucket
-            - s3:PutObject
-            - s3:ListObject
-          Resource: [
-            "arn:aws:s3:::${self:provider.environment.S3_BUCKET}",
-            "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
-            ]
+            - "s3:GetObject"
+            - "s3:PutObject"
+            - "s3:GetBucketLocation"
+            - "s3:GetObject"
+            - "s3:ListBucket"
+            - "s3:ListBucketMultipartUploads"
+            - "s3:ListMultipartUploadParts"
+            - "s3:AbortMultipartUpload"
+            - "s3:CreateBucket"
+            - "s3:PutObject"
+            - "s3:ListObject"
+          Resource:
+            - "arn:aws:s3:::${self:provider.environment.S3_BUCKET}"
+            - "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
         # CloudWatchにログ出力を許可
         - Effect: Allow
           Action:
@@ -35,6 +41,24 @@ provider:
             - logs:PutLogEvents
           Resource:
             - "*"
+        - Effect: "Allow"
+          Action:
+            - "s3:GetObject"
+            - "s3:ListBucket"
+          Resource:
+            - "arn:aws:s3:::glue-test-enmai"
+            - "arn:aws:s3:::glue-test-enmai/*"
+        - Effect: "Allow"
+          Action:
+            - "s3:GetObject"
+            - "s3:ListBucket"
+          Resource:
+            - "arn:aws:s3:::athena-api-kii/output"
+            - "arn:aws:s3:::athena-api-kii/output/*"
+  # apiGateway:
+  #   apiKeys:
+  #     - name: my-api-key
+  #       value: ${ssm:sql-api-test-apigateway-key}
   stage: prod
   region: ap-northeast-1
   deploymentBucket: athena-api-kii # デプロイ時に使うS3 あまり増やすと上限に引っかかるのでこれだけにした
@@ -49,6 +73,7 @@ functions:
           path: /{proxy+}
           method: ANY
           cors: true
+
 
 plugins:
   - serverless-offline

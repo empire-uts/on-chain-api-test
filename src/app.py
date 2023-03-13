@@ -7,7 +7,7 @@ from mangum import Mangum
 from cachetools import TTLCache
 from datetime import datetime, timedelta
 
-app = FastAPI(debug=True)
+app = FastAPI(debug=True, root_path="/prod/")
 
 # Set up Athena client and S3 bucket
 s3_output = 's3://athena-api-kii/output/'

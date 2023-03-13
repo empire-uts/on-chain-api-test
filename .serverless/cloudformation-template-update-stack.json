@@ -97,6 +97,28 @@
                   "Resource": [
                     "*"
                   ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::glue-test-enmai",
+                    "arn:aws:s3:::glue-test-enmai/*"
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::athena-api-kii/output",
+                    "arn:aws:s3:::athena-api-kii/output/*"
+                  ]
                 }
               ]
             }
@@ -125,7 +147,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:074c6a91de5e98aa40fe3ef438a289d699d8b508c22452b6993bb1effd9d9afd"
+          "ImageUri": "578420364049.dkr.ecr.ap-northeast-1.amazonaws.com/sql-api-test@sha256:3fdb4a7909f34166b5754a357ce511d73e8580388d1e8a86089df7b269bd4019"
         },
         "PackageType": "Image",
         "FunctionName": "sql-api-test-prod-index",
@@ -147,14 +169,14 @@
         "IndexLogGroup"
       ]
     },
-    "IndexLambdaVersionZkSXunP9yxMDglAGnLVPVsrIf30JsaSN3QIaAg15Bqg": {
+    "IndexLambdaVersionz2DsbFMYMvkkHiM16ppFJUUpdDUEV7myqmerb28OQ": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "IndexLambdaFunction"
         },
-        "CodeSha256": "074c6a91de5e98aa40fe3ef438a289d699d8b508c22452b6993bb1effd9d9afd"
+        "CodeSha256": "3fdb4a7909f34166b5754a357ce511d73e8580388d1e8a86089df7b269bd4019"
       }
     },
     "ApiGatewayRestApi": {
@@ -229,6 +251,54 @@
         }
       }
     },
+    "ApiGatewayMethodOptions": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "MethodResponses": [
+          {
+            "StatusCode": "200",
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true
+            },
+            "ResponseModels": {}
+          }
+        ],
+        "RequestParameters": {},
+        "Integration": {
+          "Type": "MOCK",
+          "RequestTemplates": {
+            "application/json": "{statusCode:200}"
+          },
+          "ContentHandling": "CONVERT_TO_TEXT",
+          "IntegrationResponses": [
+            {
+              "StatusCode": "200",
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-Trace-Id'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,DELETE,GET,HEAD,PATCH,POST,PUT'"
+              },
+              "ResponseTemplates": {
+                "application/json": ""
+              }
+            }
+          ]
+        },
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
     "ApiGatewayMethodProxyVarAny": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -275,7 +345,56 @@
         "IndexLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1678283508085": {
+    "ApiGatewayMethodAny": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "ANY",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "IndexLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "IndexLambdaPermissionApiGateway"
+      ]
+    },
+    "ApiGatewayDeployment1678708137284": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -285,7 +404,9 @@
       },
       "DependsOn": [
         "ApiGatewayMethodProxyVarOptions",
-        "ApiGatewayMethodProxyVarAny"
+        "ApiGatewayMethodOptions",
+        "ApiGatewayMethodProxyVarAny",
+        "ApiGatewayMethodAny"
       ]
     },
     "IndexLambdaPermissionApiGateway": {
@@ -336,7 +457,7 @@
     "IndexLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "IndexLambdaVersionZkSXunP9yxMDglAGnLVPVsrIf30JsaSN3QIaAg15Bqg"
+        "Ref": "IndexLambdaVersionz2DsbFMYMvkkHiM16ppFJUUpdDUEV7myqmerb28OQ"
       },
       "Export": {
         "Name": "sls-sql-api-test-prod-IndexLambdaFunctionQualifiedArn"
